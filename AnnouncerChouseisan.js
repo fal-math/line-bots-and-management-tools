@@ -1,4 +1,4 @@
-function checkChouseisanToday() {
+function announcerChouseisanToday() {
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -7,7 +7,7 @@ function checkChouseisanToday() {
   checkChouseisan(ymd, ymd, GROUP_ID_TAIKAI_MOUSHIKOMI);
 }
 
-function checkChouseisanThisWeek() {
+function announcerChouseisanThisWeek() {
   const today = new Date();
   const start = new Date(today);
   start.setDate(start.getDate() - 3);

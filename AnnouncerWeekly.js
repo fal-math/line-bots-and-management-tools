@@ -1,4 +1,4 @@
-function weeklyAnnounce() {
+function announcerWeekly() {
   let message = "【活動カレンダー】 \n";
   message += "https://sites.google.com/view/chyfrfr/cfc \n";
   message += "\n";
@@ -20,5 +20,5 @@ function weeklyAnnounce() {
   message += CHOUSEISAN_F_URL + "\n";
   message += "<G級>\n";
   message += CHOUSEISAN_G_URL;
-  pushTextV2MessageToLine(GROUP_ID_TAIKUAI_MOUSHIKOMI, message, null, Utilities.getUuid());
+  pushTextV2MessageToLine(GROUP_ID_ZENTAI, message, null, Utilities.getUuid());
 }
