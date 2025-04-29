@@ -1,20 +1,24 @@
 function checkChouseisanByClass(startYMD, endYMD, id) {
-  const startMD = toMD(startYMD);
-  const endMD = toMD(endYMD);
+  function getter(url, karutaClass) {
+    const allEvents = fetchChouseisan(url)
+    const filteredEvents = filterEventsWithDeadlineInRange(allEvents, startYMD, endYMD);
+    const categorizedEvents = categorizeParticipants(filteredEvents);
+    return formatEventStatus(categorizedEvents, karutaClass);
+  }
 
-  let message = `＝大会申込状況まとめ（〆切 ${startMD}〜${endMD}）＝\n\n`;
-  message += fetchChouseisan(CHOUSEISAN_A_CSV, "A", startYMD, endYMD);
-  message += fetchChouseisan(CHOUSEISAN_B_CSV, "B", startYMD, endYMD);
-  message += fetchChouseisan(CHOUSEISAN_C_CSV, "C", startYMD, endYMD);
-  message += fetchChouseisan(CHOUSEISAN_D_CSV, "D", startYMD, endYMD);
-  message += fetchChouseisan(CHOUSEISAN_E_CSV, "E", startYMD, endYMD);
-  message += fetchChouseisan(CHOUSEISAN_F_CSV, "F", startYMD, endYMD);
-  message += fetchChouseisan(CHOUSEISAN_G_CSV, "G", startYMD, endYMD);
+  let message = `＝大会申込状況まとめ（〆切 ${toMD(startYMD)}〜${toMD(endYMD)}）＝\n\n`;
+  message += getter(CHOUSEISAN_A_CSV, "A");
+  message += getter(CHOUSEISAN_B_CSV, "B");
+  message += getter(CHOUSEISAN_C_CSV, "C");
+  message += getter(CHOUSEISAN_D_CSV, "D");
+  message += getter(CHOUSEISAN_E_CSV, "E");
+  message += getter(CHOUSEISAN_F_CSV, "F");
+  message += getter(CHOUSEISAN_G_CSV, "G");
 
   pushTextV2MessageToLine(id, message, null, Utilities.getUuid());
 }
 
-function fetchChouseisan(url, karutaClass, startYMD, endYMD) {
+function fetchChouseisan(url) {
   const postheader = {
     "accept": "gzip, */*",
     "timeout": "20000"
@@ -26,7 +30,8 @@ function fetchChouseisan(url, karutaClass, startYMD, endYMD) {
   };
 
   const eventData = UrlFetchApp.fetch(url, parameters).getContentText('UTF-8');
-  const events = parseCSVToEventStatus(eventData);
+  return parseCSVToEventStatus(eventData);
+  // return :
   // events data format
   // {
   //   "$title": {
@@ -40,42 +45,8 @@ function fetchChouseisan(url, karutaClass, startYMD, endYMD) {
   //       "$player4": ,
   //     }
   //   },
-  //   "$title": {
-  //     "event": "$title",
-  //     "date": "YYYY-MM-DD",
-  //     "deadline": "YYYY-MM-DD",
-  //     "member": {
-  //       "$player1": "○",
-  //       "$player2": "△",
-  //       "$player3": "×",
-  //       "$player4": ,
-  //     }
-  //   },
+  //   ...
   // }
-
-  const filtered = filterEventsWithDeadlineInRange(events, startYMD, endYMD);
-  return formatEventStatus(filtered, karutaClass);
-}
-
-function test1() {
-  const postheader = {
-    "accept": "gzip, */*",
-    "timeout": "20000"
-  };
-  const parameters = {
-    "method": "get",
-    "muteHttpExceptions": true,
-    "headers": postheader
-  };
-  const eventData = UrlFetchApp.fetch(CHOUSEISAN_C_CSV, parameters).getContentText('UTF-8');
-  Logger.log(eventData);
-
-  const events = parseCSVToEventStatus(eventData);
-  Logger.log(events);
-
-  const filtered = filterEventsWithDeadlineInRange(events, "2025-01-01", "2025-12-31");
-  Logger.log(filtered);
-  return;
 }
 
 function parseCSVToEventStatus(csvContent) {
@@ -130,36 +101,46 @@ function filterEventsWithDeadlineInRange(events, startYMD, endYMD) {
   const result = {};
 
   for (const key in events) {
-    if (Object.hasOwnProperty.call(events, key)) {
+    if (events.hasOwnProperty(key)) {
       const eventData = events[key];
       const deadline = eventData.deadline;
-
       if (deadline >= startYMD && deadline <= endYMD) {
-        const attending = [];
-        const notAttending = [];
-        const noAnswer = [];
-
-        for (const name in eventData.member) {
-          const status = eventData.member[name];
-          if (status === "◯") attending.push(name);
-          else if (status === "×") notAttending.push(name);
-          else noAnswer.push(name);
-        }
-
-        result[eventData.event] = {
-          event: eventData.event,
-          date: eventData.date,
-          deadline: eventData.deadline,
-          participants: { attending, notAttending, noAnswer }
-        };
+        result[eventData.event] = eventData;
       }
     }
   }
+
   return result;
 }
 
-function formatAttendings(events){
-  
+function categorizeParticipants(events) {
+  const result = {};
+  for (const key in events) {
+    eventData = events[key];
+    members = eventData.member;
+
+    const attending = [];
+    const notAttending = [];
+    const noAnswer = [];
+
+    for (const name in members) {
+      if (members.hasOwnProperty(name)) {
+        const status = members[name];
+        if (status === "◯") attending.push(name);
+        else if (status === "×") notAttending.push(name);
+        else noAnswer.push(name);
+      }
+    }
+
+    result[eventData.event] = {
+      event: eventData.event,
+      date: eventData.date,
+      deadline: eventData.deadline,
+      participants: { attending, notAttending, noAnswer }
+    };
+  }
+
+  return result;
 }
 
 function formatEventStatus(eventsJson, karutaClass) {
@@ -172,12 +153,12 @@ function formatEventStatus(eventsJson, karutaClass) {
       const { date, event, participants } = eventInfo;
       const { noAnswer, attending } = participants;
 
-      const noAnswerStr = noAnswer.length ? noAnswer.join(", ") : "";
-      const attendingStr = attending.length ? attending.join(", ") : "";
+      const noAnswerStr = noAnswer.length ? noAnswer.join("\n") : "";
+      const attendingStr = attending.length ? attending.join("\n") : "";
 
-      output += `${toMD(date)} ${event}\n`;
-      output += `未定:${noAnswerStr}\n`;
-      output += `参加:${attendingStr}\n`;
+      output += `🏆${toMD(date)} ${event}\n`;
+      output += `▼未定\n${noAnswerStr}\n`;
+      output += `▼参加\n${attendingStr}\n`;
       output += `\n`;
     }
   }
