@@ -37,7 +37,7 @@ function buildGroupMessages(baseMessage, groups) {
   for (const letter in groups) {
     const group = groups[letter];
     if (group.events.length > 0) {
-      baseMessage += `<${letter}級>\n申込入力 → ${group.url}\n`;
+      baseMessage += `${letter}級|申込: ${group.url}\n`;
       group.events.forEach(eventName => {
         baseMessage += `・${eventName}\n`;
       });

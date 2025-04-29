@@ -1,4 +1,4 @@
-function checkChouseisan(startYMD, endYMD, id) {
+function checkChouseisanByClass(startYMD, endYMD, id) {
   const startMD = toMD(startYMD);
   const endMD = toMD(endYMD);
 
@@ -27,8 +27,55 @@ function fetchChouseisan(url, karutaClass, startYMD, endYMD) {
 
   const eventData = UrlFetchApp.fetch(url, parameters).getContentText('UTF-8');
   const events = parseCSVToEventStatus(eventData);
+  // events data format
+  // {
+  //   "$title": {
+  //     "event": "$title",
+  //     "date": "YYYY-MM-DD",
+  //     "deadline": "YYYY-MM-DD",
+  //     "member": {
+  //       "$player1": "○",
+  //       "$player2": "△",
+  //       "$player3": "×",
+  //       "$player4": ,
+  //     }
+  //   },
+  //   "$title": {
+  //     "event": "$title",
+  //     "date": "YYYY-MM-DD",
+  //     "deadline": "YYYY-MM-DD",
+  //     "member": {
+  //       "$player1": "○",
+  //       "$player2": "△",
+  //       "$player3": "×",
+  //       "$player4": ,
+  //     }
+  //   },
+  // }
+
   const filtered = filterEventsWithDeadlineInRange(events, startYMD, endYMD);
   return formatEventStatus(filtered, karutaClass);
+}
+
+function test1() {
+  const postheader = {
+    "accept": "gzip, */*",
+    "timeout": "20000"
+  };
+  const parameters = {
+    "method": "get",
+    "muteHttpExceptions": true,
+    "headers": postheader
+  };
+  const eventData = UrlFetchApp.fetch(CHOUSEISAN_C_CSV, parameters).getContentText('UTF-8');
+  Logger.log(eventData);
+
+  const events = parseCSVToEventStatus(eventData);
+  Logger.log(events);
+
+  const filtered = filterEventsWithDeadlineInRange(events, "2025-01-01", "2025-12-31");
+  Logger.log(filtered);
+  return;
 }
 
 function parseCSVToEventStatus(csvContent) {
@@ -41,7 +88,7 @@ function parseCSVToEventStatus(csvContent) {
 
   const header = rows[0];
   const rawParticipants = header.slice(1);
-  const participants = rawParticipants.map(p => p.split(/[\u0020\u3000]/)[0].trim());
+  const participants = rawParticipants.map(p => p.trim());
 
   const eventRegex = /^(\d{1,2}\/\d{1,2})(?:[日月火水木金土](?:祝)?)?\.(.+?)\(〆(\d{1,2}\/\d{1,2})(?:[日月火水木金土](?:祝)?)?\)$/;
 
@@ -109,6 +156,10 @@ function filterEventsWithDeadlineInRange(events, startYMD, endYMD) {
     }
   }
   return result;
+}
+
+function formatAttendings(events){
+  
 }
 
 function formatEventStatus(eventsJson, karutaClass) {
