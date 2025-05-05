@@ -45,10 +45,12 @@ function pushTextV2MessageToLine(targetId, messageText, substitution, retryKey) 
       'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN,
       'X-Line-Retry-Key': retryKey
     },
-    payload: JSON.stringify(payload)
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true 
   };
 
   // UrlFetchAppを使用してLINEにプッシュメッセージを送信する
   // Send the push message to LINE using UrlFetchApp.
-  UrlFetchApp.fetch(url, options);
+  const res = UrlFetchApp.fetch(url, options);
+  Logger.log(res.getContentText());
 }
