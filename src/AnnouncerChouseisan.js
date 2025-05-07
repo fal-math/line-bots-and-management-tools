@@ -12,7 +12,7 @@ function announcerChouseisanThisWeek() {
   const start = new Date(today);
   start.setDate(start.getDate() - 7);
   const end = new Date(today);
-  end.setDate(end.getDate() + 7);
+  end.setDate(end.getDate() + 0);
 
   const startYMD = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
   const endYMD = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;

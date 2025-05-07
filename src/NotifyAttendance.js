@@ -13,7 +13,6 @@ function notifyAttendance() {
     const messageDate = Utilities.formatDate(latestMessage.getDate(), "JST", "MM/dd HH:mm:ss")
     let notice = `件名　　: ${latestMessage.getSubject()}\n`;
     notice += `受信時刻: ${messageDate}\n`;
-    notice += `発信者　: ${latestMessage.getFrom()}\n`;
     notice += `--------------------------------------\n`
 
     // HTMLをプレーンテキストに変換して通知
@@ -23,7 +22,7 @@ function notifyAttendance() {
     Logger.log(notice);
 
     try {
-      pushTextV2MessageToLine(GROUP_ID_TEST, notice, null); // LINE通知
+      pushTextV2MessageToLine(GROUP_ID_UNNEI_SHIFT, notice, null); // LINE通知
     } catch (e) {
       Logger.log("LINE通知エラー: " + e.message);
     }
